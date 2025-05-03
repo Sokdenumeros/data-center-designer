@@ -60,7 +60,7 @@
   </style>
 </head>
 <body>
-  <div id="top-controls" style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #eaeaea;">
+  <div id="top-controls" style="display: flex; align-items: center; gap: 10px; padding: 8px; background: #eaeaea;">
     <input type="file" id="specFile" accept=".csv" />
     
     <label for="objectSelector">Select an object:</label>
@@ -103,6 +103,7 @@
     const file = this.files[0];
     if (file) {
       processCSVModules(file, function (parsedObjects) {
+        console.log(parsedObjects);
         renderSidebarItems(parsedObjects);
       });
     }
