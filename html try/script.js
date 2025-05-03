@@ -45,6 +45,20 @@ function renderSidebarItems(objects) {
   });
 }
 
+function clearCanvas() {
+  const canvas = document.getElementById('canvas');
+
+  // Remove all elements with class "dropped"
+  const droppedElements = canvas.querySelectorAll('.dropped');
+  droppedElements.forEach(el => el.remove());
+
+  // Clear droppedObjects array
+  droppedObjects.length = 0;
+
+  // Reset stats display
+  updateStats();
+}
+document.getElementById('clearBtn').addEventListener('click', clearCanvas);
 
 function addToCanvas(obj, x, y) {
   const el = document.createElement('div');
