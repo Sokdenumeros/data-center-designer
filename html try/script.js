@@ -226,3 +226,59 @@ function processCSVModules(file, callback) {
 
   reader.readAsText(file);
 }
+
+
+let parsedObjects = [];
+
+document.getElementById('specFile').addEventListener('change', function (e) {
+  const file = e.target.files[0];
+  if (file) {
+    processCSVSpecs(file, function (results) {
+      parsedObjects = results;
+      populateDropdown(parsedObjects);
+    });
+  }
+});
+
+function populateDropdown(objects) {
+  const select = document.getElementById('objectSelector');
+  select.innerHTML = '<option value="">-- Choose one --</option>'; // Reset
+
+  objects.forEach((obj, index) => {
+    const option = document.createElement('option');
+    option.value = index;
+    option.textContent = `${obj.name} (ID: ${obj.id})`;
+    select.appendChild(option);
+  });
+}
+
+document.getElementById('objectSelector').addEventListener('change', function () {
+  const selectedIndex = this.value;
+  const detailsDiv = document.getElementById('objectDetails');
+
+  if (selectedIndex !== '') {
+    const obj = parsedObjects[selectedIndex];
+    detailsDiv.innerHTML = formatObjectDetails(obj);
+  } else {
+    detailsDiv.innerHTML = '';
+  }
+});
+
+function formatObjectDetails(obj) {
+  let html = `<h3>${obj.name} (ID: ${obj.id})</h3>`;
+
+  const printList = (title, items) => {
+    if (!items || items.length === 0) return '';
+    return `<strong>${title}</strong><ul>` +
+      items.map(i => `<li>${i.unit}: ${i.amount}</li>`).join('') +
+      '</ul>';
+  };
+
+  html += printList('Below Amount', obj.belowAmount);
+  html += printList('Above Amount', obj.aboveAmount);
+  html += printList('Minimize', obj.minimize);
+  html += printList('Maximize', obj.maximize);
+  html += printList('Unconstrained', obj.unconstrained);
+
+  return html;
+}

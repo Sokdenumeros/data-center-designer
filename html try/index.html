@@ -44,24 +44,30 @@
   </style>
 </head>
 <body>
-  <input type="file" id="csvFile" accept=".csv" />
-  <input type="file" id="csvFile2" accept=".csv" />
+  <input type="file" id="specFile" accept=".csv" />
+  
+<label for="objectSelector">Select an object:</label>
+<select id="objectSelector">
+  <option value="">-- Choose one --</option>
+</select>
+<div id="objectDetails" style="margin-top: 20px;"></div>
+
+  <input type="file" id="moduleFile" accept=".csv" />
   <div id="sidebar"></div>
   <div id="canvas"></div>
 <div id="stats" style="position: absolute; bottom: 10px; left: 10px; background: #fff; padding: 10px; border: 1px solid #ccc;"></div>
 <script>
-  document.getElementById('csvFile').addEventListener('change', function () {
+  document.getElementById('specFile').addEventListener('change', function () {
     const file = this.files[0];
     if (file) {
       processCSVSpecs(file, function (parsedObjects) {
         console.log(parsedObjects);
-        // Aquí puedes hacer lo que necesites con los datos
       });
     }
   });
 </script>
 <script>
-  document.getElementById('csvFile2').addEventListener('change', function () {
+  document.getElementById('moduleFile').addEventListener('change', function () {
     const file = this.files[0];
     if (file) {
       processCSVModules(file, function (parsedObjects) {
