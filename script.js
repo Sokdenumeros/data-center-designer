@@ -148,60 +148,62 @@ function getInputAmount(obj, key) {
   return found ? Number(found.amount) : null;
 }
 
-function constraintsSatisfied(totals, specObject) {
-  for (const b of specObject.belowAmount || []) {
-    if ((-totals[b.unit] || 0) > b.amount) return false;
-  }
+function findPartialSolution(sidebarItems, specObject, maxAttempts = 100) {
+  const selected = [];
+  const totals = {};
 
-  for (const a of specObject.aboveAmount || []) {
-    if ((totals[a.unit] || 0) < a.amount) return false;
-  }
+  const below = (specObject.belowAmount || []).reduce((map, b) => {
+    map[b.unit] = b.amount;
+    return map;
+  }, {});
 
-  return true;
-}
+  const above = (specObject.aboveAmount || []).reduce((map, a) => {
+    map[a.unit] = a.amount;
+    return map;
+  }, {});
 
-function findSolutionRecursive(sidebarItems, specObject, currentTotals = {}, selected = [], depth = 0, maxDepth = 10) {
-  if (constraintsSatisfied(currentTotals, specObject)) {
-    return selected; // ✅ Valid solution
-  }
+  let attempts = 0;
 
-  if (depth >= maxDepth) {
-    return null; // ❌ Too deep
-  }
+  while (attempts < maxAttempts) {
+    let improved = false;
 
-  for (const item of sidebarItems) {
-    // Clone totals and update with this item's outputs
-    const newTotals = { ...currentTotals };
-    for (const output of item.outputs || []) {
-      newTotals[output.unit] = (newTotals[output.unit] || 0) + output.amount;
+    for (const item of sidebarItems) {
+      const testTotals = { ...totals };
+
+      for (const output of item.outputs || []) {
+        testTotals[output.unit] = (testTotals[output.unit] || 0) + output.amount;
+      }
+      for (const input of item.inputs || []) {
+        testTotals[input.unit] = (testTotals[input.unit] || 0) - input.amount;
+      }
+
+      // Check if this item improves at least one unmet constraint
+      const improvesSomething = Object.keys(above).some(unit =>
+        (testTotals[unit] || 0) > (totals[unit] || 0) && (testTotals[unit] || 0) < above[unit]
+      ) || Object.keys(below).some(unit =>
+        (testTotals[unit] || 0) < (totals[unit] || 0) && (testTotals[unit] || 0) > below[unit]
+      );
+
+      if (improvesSomething) {
+        selected.push(item);
+        Object.assign(totals, testTotals); // Accept new totals
+        improved = true;
+        break; // Only add one per iteration
+      }
     }
-    for (const input of item.inputs || []) {
-      newTotals[input.unit] = (newTotals[input.unit] || 0) - input.amount;
-    }
 
-    const result = findSolutionRecursive(
-      sidebarItems,
-      specObject,
-      newTotals,
-      [...selected, item],
-      depth + 1,
-      maxDepth
-    );
-
-    if (result) return result; // ✅ Found valid path
+    if (!improved) break; // No progress, exit loop
+    attempts++;
   }
 
-  return null; // ❌ No valid path at this level
+  return selected;
 }
-
 
 function firstSolution() {
-        console.log(sidebarItems);
-        console.log(selectedSpecObject);
-  const solution = findSolutionRecursive(sidebarItems, selectedSpecObject);
+  const solution = findPartialSolution(sidebarItems, selectedSpecObject);
 
-  if (!solution) {
-    alert("❌ No solution found within max depth.");
+  if (!solution.length) {
+    alert("⚠️ No viable modules could be added.");
     return;
   }
 
