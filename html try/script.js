@@ -3,6 +3,7 @@ let selectedSpecObject = null;
 let parsedObjects = [];
 let sidebarItems = [];
 let lastMoved = null;
+let scale = null; 
 
 function renderSidebarItems(objects) {
   const sidebar = document.getElementById('sidebar');
@@ -377,14 +378,69 @@ document.getElementById('objectSelector').addEventListener('change', function ()
 
   if (selectedIndex !== '') {
     selectedSpecObject = parsedObjects[selectedIndex];
+    //scale = getScale(selectedSpecObject, 'id')
     detailsDiv.innerHTML = formatObjectDetails(selectedSpecObject);
+    drawCenteredBoxFromSpec(selectedSpecObject);
   } else {
     selectedSpecObject = null;
+    drawCenteredBoxFromSpec(selectedSpecObject);
     detailsDiv.innerHTML = '';
   }
 
   updateStats();
 });
+
+function drawCenteredBoxFromSpec(spec) {
+  // Eliminar cuadro anterior si existe
+  const oldBox = document.getElementById('specBox');
+  const oldLabel = document.getElementById('specBoxLabel');
+  if (oldBox) oldBox.remove();
+  if (oldLabel) oldLabel.remove();
+
+  // Obtener dimensiones
+  const width = getInputAmountSpec(spec, 'Space_X') || null;
+  const height = getInputAmountSpec(spec, 'Space_Y') || null;
+
+  // Crear el cuadro
+  const box = document.createElement('div');
+  box.id = 'specBox';
+  box.style.position = 'fixed';
+  box.style.width = width + 'px';
+  box.style.height = height + 'px';
+  box.style.border = '2px solid green';
+  box.style.backgroundColor = 'transparent';
+  box.style.left = `calc(50% - ${width / 2}px)`;
+  box.style.top = `calc(50% - ${height / 2}px)`;
+  box.style.pointerEvents = 'none';
+
+  // Crear la etiqueta
+  const label = document.createElement('div');
+  label.id = 'specBoxLabel';
+  label.textContent = `W: ${width}px | H: ${height}px`;
+  label.style.position = 'fixed';
+  label.style.left = `calc(50% + ${width / 2 + 10}px)`;
+  label.style.top = `calc(50% - ${height / 2}px)`;
+  label.style.color = 'green';
+  label.style.fontWeight = 'bold';
+  label.style.backgroundColor = 'white';
+  label.style.padding = '2px 4px';
+  label.style.border = '1px solid green';
+  label.style.borderRadius = '4px';
+  label.style.pointerEvents = 'none';
+
+  document.body.appendChild(box);
+  document.body.appendChild(label);
+}
+
+function getInputAmountSpec(obj, key) {
+  const found = obj.belowAmount?.find(amount => amount.unit === key);
+  return found ? Number(found.amount) : null;
+}
+
+/*function getScale(obj, key) {
+  const found = obj.id?.find(id => id === key);
+  return found ? Number(600/found.amount) : null;
+}*/
 
 function formatObjectDetails(obj) {
   let html = `<h3>${obj.name} (ID: ${obj.id})</h3>`;
