@@ -65,8 +65,7 @@
     const file = this.files[0];
     if (file) {
       processCSVModules(file, function (parsedObjects) {
-        console.log(parsedObjects);
-        // Aquí puedes hacer lo que necesites con los datos
+        renderSidebarItems(parsedObjects);
       });
     }
   });

@@ -1,76 +1,54 @@
-// Sample predefined objects
-const objects = [
-  {
-    id: 1,
-    name: 'Transformer_100',
-    isInput: true,
-    inputs: [{ unit: 'Grid_Connection', amount: 1 },{ unit: 'size_x', amount: 40 },{ unit: 'size_y', amount: 10 }],
-    outputs: [{ unit: 'Space_X', amount: 40 }, { unit: 'Space_Y', amount: 45 }]
-  },
-  {
-    id: 2,
-    name: 'Battery_200',
-    isInput: false,
-    inputs: [{ unit: 'Power_Cell', amount: 2 },{ unit: 'size_x', amount: 40 },{ unit: 'size_y', amount: 30 }],
-    outputs: [{ unit: 'Grid_Connection', amount: 1 }]
-  },
-  {
-    id: 3,
-    name: 'Generator_300',
-    isInput: true,
-    inputs: [{ unit: 'Fuel', amount: 3 }, { unit: 'size_x', amount: 40 },{ unit: 'size_y', amount: 50 }],
-    outputs: [{ unit: 'Electricity', amount: 5 }]
-  }
-];
-
-// Render sidebar items
-const sidebar = document.getElementById('sidebar');
-const canvas = document.getElementById('canvas');
-const stats = document.getElementById('stats');
-
 let droppedObjects = [];
 
-objects.forEach(obj => {
-  const el = document.createElement('div');
-  el.className = 'item';
-  el.textContent = `${obj.name}`;
-  el.setAttribute('draggable', 'true');
-  el.dataset.object = JSON.stringify(obj);
-  el.dataset.origin = 'sidebar'; // ⬅️ Important flag
+function renderSidebarItems(objects) {
+  const sidebar = document.getElementById('sidebar');
+  const canvas = document.getElementById('canvas');
 
-  el.addEventListener('click', () => {
-    addToCanvas(obj, 20, 20);
+  sidebar.innerHTML = ''; // Limpiar contenido anterior si lo hubiera
+
+  objects.forEach(obj => {
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.textContent = `${obj.name}`;
+    el.setAttribute('draggable', 'true');
+    el.dataset.object = JSON.stringify(obj);
+    el.dataset.origin = 'sidebar';
+
+    el.addEventListener('click', () => {
+      addToCanvas(obj, 20, 20);
+    });
+
+    el.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', JSON.stringify(obj));
+      e.dataTransfer.setData('origin', 'sidebar');
+    });
+
+    sidebar.appendChild(el);
   });
 
-  el.addEventListener('dragstart', (e) => {
-    e.dataTransfer.setData('text/plain', JSON.stringify(obj));
-    e.dataTransfer.setData('origin', 'sidebar');
+  canvas.addEventListener('dragover', e => e.preventDefault());
+
+  canvas.addEventListener('drop', e => {
+    e.preventDefault();
+
+    const data = e.dataTransfer.getData('text/plain');
+    const origin = e.dataTransfer.getData('origin');
+
+    if (origin === 'sidebar') {
+      const obj = JSON.parse(data);
+      addToCanvas(obj, e.offsetX, e.offsetY);
+    }
   });
+}
 
-  sidebar.appendChild(el);
-});
-
-canvas.addEventListener('dragover', e => e.preventDefault());
-
-canvas.addEventListener('drop', e => {
-  e.preventDefault();
-
-  const data = e.dataTransfer.getData('text/plain');
-  const origin = e.dataTransfer.getData('origin');
-
-  if (origin === 'sidebar') {
-    const obj = JSON.parse(data);
-    addToCanvas(obj, e.offsetX, e.offsetY);
-  }
-});
 
 function addToCanvas(obj, x, y) {
   const el = document.createElement('div');
   el.className = 'dropped';
   el.textContent = obj.name;
 
-  const sizeX = getInputAmount(obj, 'size_x') || 80;
-  const sizeY = getInputAmount(obj, 'size_y') || 40;
+  const sizeX = getInputAmount(obj, 'Space_X') || 80;
+  const sizeY = getInputAmount(obj, 'Space_Y') || 40;
 
   el.style.width = sizeX + 'px';
   el.style.height = sizeY + 'px';
@@ -120,7 +98,7 @@ function updateStats() {
 
   for (const obj of droppedObjects) {
     for (const input of obj.inputs || []) {
-      if (!['size_x', 'size_y'].includes(input.unit)) {
+      if (!['Space_X', 'Space_Y'].includes(input.unit)) {
         inputSums[input.unit] = (inputSums[input.unit] || 0) + Number(input.amount);
       }
     }
