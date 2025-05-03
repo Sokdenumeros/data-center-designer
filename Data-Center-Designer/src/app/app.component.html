@@ -324,10 +324,22 @@
     <div>
   <input type="file" (change)="onFileSelected($event)" accept=".csv" />
 </div>
-<div>
-  <button *ngFor="let id of uniqueIds" (click)="onButtonClick(id)">
+<div class="sidebar">
+  <button
+    *ngFor="let id of uniqueIds"
+    draggable="true"
+    (dragstart)="onDragStart($event, id)">
     ID: {{ id }}
   </button>
+</div>
+<div
+  class="canvas"
+  (dragover)="onDragOver($event)"
+  (drop)="onDrop($event)">
+  <p>Drop items here</p>
+  <div *ngFor="let item of droppedItems">
+    Dropped ID: {{ item }}
+  </div>
 </div>
   </div>
 </main>

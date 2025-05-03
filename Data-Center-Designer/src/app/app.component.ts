@@ -1,5 +1,8 @@
 import { Component } from '@angular/core';
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
 import { RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import * as Papa from 'papaparse';  // Import PapaParse
 
 @Component({
@@ -9,40 +12,52 @@ import * as Papa from 'papaparse';  // Import PapaParse
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'Data-Center-Designer';
-  uniqueIds: string[] = [];  // Store unique IDs
+    title = 'Data-Center-Designer';
+  rawData: any[] = [];
+  uniqueIds: string[] = [];
+  droppedItems: string[] = [];
 
-  // Handle the file input event and parse the CSV
-  onFileSelected(event: any) {
-    const file: File = event.target.files[0];  // Get the selected file
+onDragStart(event: DragEvent, id: string) {
+  event.dataTransfer?.setData('text/plain', id);
+}
 
+onDragOver(event: DragEvent) {
+  event.preventDefault(); // Needed to allow drop
+}
+
+onDrop(event: DragEvent) {
+  event.preventDefault();
+  const id = event.dataTransfer?.getData('text/plain');
+  if (id) {
+    this.droppedItems.push(id);
+  }
+}
+
+
+  onFileSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
-      Papa.parse(file, {
-        complete: (result) => {
-          this.processCSV(result.data);  // Parse and process the data
-        },
-        header: true,  // Treat the first row as header
-      });
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = reader.result as string;
+        this.parseCSV(text);
+      };
+      reader.readAsText(file);
     }
   }
 
-  // Process the CSV data
-  processCSV(data: any[]) {
-    const ids: Set<string> = new Set();  // To store unique IDs
-
-    // Loop through the rows and collect unique IDs
-    data.forEach(row => {
-      if (row.ID) {
-        ids.add(row.ID);  // Add ID to the Set
-      }
+  parseCSV(data: string) {
+    const lines = data.trim().split('\n');
+    const headers = lines[0].split('\t');
+    this.rawData = lines.slice(1).map(line => {
+      const values = line.split('\t');
+      return Object.fromEntries(headers.map((h, i) => [h.trim(), values[i].trim()]));
     });
 
-    // Convert the Set to an array
-    this.uniqueIds = Array.from(ids);
+    this.uniqueIds = [...new Set(this.rawData.map(item => item.ID))];
   }
 
-  // Handle button click event (for demonstration)
   onButtonClick(id: string) {
-    console.log('Button clicked for ID:', id);
+    console.log('Clicked:', id);
   }
 }

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Drag & Drop Example</title>
+  <style>
+    body {
+      display: flex;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    #sidebar {
+      width: 200px;
+      background: #f0f0f0;
+      padding: 10px;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+
+    .item {
+      margin: 10px 0;
+      padding: 8px;
+      background: #ddd;
+      cursor: grab;
+      border: 1px solid #999;
+    }
+
+    #canvas {
+      flex: 1;
+      position: relative;
+      background: #fff;
+      border: 2px dashed #ccc;
+      margin: 10px;
+      height: 600px;
+    }
+
+    .dropped {
+      position: absolute;
+      padding: 5px 10px;
+      background: lightgreen;
+      border: 1px solid green;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="sidebar"></div>
+  <div id="canvas"></div>
+<div id="stats" style="position: absolute; bottom: 10px; left: 10px; background: #fff; padding: 10px; border: 1px solid #ccc;"></div>
+  <script src="script.js"></script>
+</body>
+</html>
