@@ -175,6 +175,8 @@ function findSolutionRecursive(sidebarItems, specObject, currentTotals = {}, sel
 
 
 function firstSolution() {
+        console.log(sidebarItems);
+        console.log(selectedSpecObject);
   const solution = findSolutionRecursive(sidebarItems, selectedSpecObject);
 
   if (!solution) {
@@ -196,22 +198,22 @@ function firstSolution() {
 document.getElementById('generateBtn').addEventListener('click', firstSolution);
 
 function updateStats() {
-  const inputSums = {};
-  const outputSums = {};
+  const netTotals = {};
 
+  // Combine inputs (subtract) and outputs (add)
   for (const obj of droppedObjects) {
     for (const input of obj.inputs || []) {
       if (!['Space_X', 'Space_Y'].includes(input.unit)) {
-        inputSums[input.unit] = (inputSums[input.unit] || 0) + Number(input.amount);
+        netTotals[input.unit] = (netTotals[input.unit] || 0) - Number(input.amount);
       }
     }
 
     for (const output of obj.outputs || []) {
-      outputSums[output.unit] = (outputSums[output.unit] || 0) + Number(output.amount);
+      netTotals[output.unit] = (netTotals[output.unit] || 0) + Number(output.amount);
     }
   }
 
-  // Convert spec lists to easy lookup maps
+  // Convert spec lists to maps
   const below = selectedSpecObject?.belowAmount?.reduce((map, item) => {
     map[item.unit] = item.amount;
     return map;
@@ -222,22 +224,23 @@ function updateStats() {
     return map;
   }, {}) || {};
 
-  const renderList = (title, data, type) => {
-    let html = `<strong>${title}</strong><ul>`;
-    for (const [unit, total] of Object.entries(data)) {
-      let color = 'green';
-      if (below[unit] !== undefined && total > below[unit]) color = 'red';
-      if (above[unit] !== undefined && total < above[unit]) color = 'red';
-      html += `<li style="color: ${color}">${unit}: ${total}</li>`;
-    }
-    html += '</ul>';
-    return html;
-  };
+  // Render the single list
+  let html = `<strong>📊 Resource Balance</strong><ul>`;
+  for ([unit, total] of Object.entries(netTotals)) {
+    let color = 'green';
+    
+    if (below[unit] !== undefined) total = -total;
+    else if(total < 0) color = 'red';
+    if (below[unit] !== undefined && total > below[unit]) color = 'red';
+    if (above[unit] !== undefined && total < above[unit]) color = 'red';
 
-  stats.innerHTML =
-    renderList('🔌 Inputs', inputSums, 'input') +
-    renderList('⚡ Outputs', outputSums, 'output');
+    html += `<li style="color: ${color}">${unit}: ${total}</li>`;
+  }
+  html += '</ul>';
+
+  stats.innerHTML = html;
 }
+
 
 
 function processCSVSpecs(file, callback) {
