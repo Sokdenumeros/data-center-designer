@@ -143,7 +143,7 @@ function updateStats() {
   stats.innerHTML = html;
 }
 
-function processCSVFile(file, callback) {
+function processCSVSpecs(file, callback) {
   const reader = new FileReader();
 
   reader.onload = function (e) {
@@ -198,6 +198,59 @@ function processCSVFile(file, callback) {
 
     const result = Object.values(grouped);
     callback(result); // Llamamos al callback con los objetos finales
+  };
+
+  reader.readAsText(file);
+}
+
+function processCSVModules(file, callback) {
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    const csvText = e.target.result;
+    const lines = csvText.trim().split('\n');
+    const headers = lines[0].split(';').map(h => h.trim());
+
+    const rows = lines.slice(1).map(line => {
+      const values = line.split(';').map(v => v.trim());
+      const row = {};
+      headers.forEach((h, i) => {
+        row[h] = values[i];
+      });
+      return row;
+    });
+
+    const grouped = {};
+
+    for (const row of rows) {
+      const key = `${row.ID}-${row.Name}`;
+      if (!grouped[key]) {
+        grouped[key] = {
+          id: parseInt(row.ID),
+          name: row.Name,
+          isInput: false, // se definirá si hay alguna fila con Is_Input = 1
+          inputs: [],
+          outputs: []
+        };
+      }
+
+      const entry = {
+        unit: row.Unit,
+        amount: parseFloat(row.Amount)
+      };
+
+      if (row.Is_Input === '1') {
+        grouped[key].inputs.push(entry);
+        grouped[key].isInput = true; // si hay al menos un input, se considera de entrada
+      }
+
+      if (row.Is_Output === '1') {
+        grouped[key].outputs.push(entry);
+      }
+    }
+
+    const result = Object.values(grouped);
+    callback(result);
   };
 
   reader.readAsText(file);
