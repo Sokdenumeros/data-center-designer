@@ -3,7 +3,7 @@ let selectedSpecObject = null;
 let parsedObjects = [];
 let sidebarItems = [];
 let lastMoved = null;
-let scale = null; 
+let scale = 1;
 
 function renderSidebarItems(objects) {
   const sidebar = document.getElementById('sidebar');
@@ -59,6 +59,23 @@ function clearCanvas() {
   // Reset stats display
   updateStats();
 }
+
+function clearScale(scale) {
+  const canvas = document.getElementById('canvas');
+  const droppedElements = canvas.querySelectorAll('.dropped');
+
+  droppedElements.forEach(el => {
+    const currentWidth = parseFloat(el.style.width);
+    const currentHeight = parseFloat(el.style.height);
+
+    if (!isNaN(currentWidth) && !isNaN(currentHeight)) {
+      el.style.width = (currentWidth * scale) + 'px';
+      el.style.height = (currentHeight * scale) + 'px';
+    }
+  });
+}
+
+
 document.getElementById('clearBtn').addEventListener('click', clearCanvas);
 
 function addToCanvas(obj, x, y) {
@@ -66,8 +83,8 @@ function addToCanvas(obj, x, y) {
   el.className = 'dropped';
   el.textContent = obj.name;
 
-  const sizeX = getInputAmount(obj, 'Space_X') || 80;
-  const sizeY = getInputAmount(obj, 'Space_Y') || 40;
+  const sizeX = (getInputAmount(obj, 'Space_X')*scale) || 80;
+  const sizeY = (getInputAmount(obj, 'Space_Y')*scale) || 40;
 
   el.style.width = sizeX + 'px';
   el.style.height = sizeY + 'px';
@@ -380,14 +397,22 @@ document.getElementById('objectSelector').addEventListener('change', function ()
   const detailsDiv = document.getElementById('objectDetails');
 
   if (selectedIndex !== '') {
+
     selectedSpecObject = parsedObjects[selectedIndex];
-    //scale = getScale(selectedSpecObject, 'id')
+    tempX= getInputAmountSpec(selectedSpecObject, 'Space_X');
+    clearScale(1/scale);
+    scale =  tempX ? Number(600/tempX) : 1;
+    clearScale(scale);
     detailsDiv.innerHTML = formatObjectDetails(selectedSpecObject);
     drawCenteredBoxFromSpec(selectedSpecObject);
   } else {
+
     selectedSpecObject = null;
-    drawCenteredBoxFromSpec(selectedSpecObject);
     detailsDiv.innerHTML = '';
+    clearScale(1/scale);
+    scale = 1;
+    clearScale(scale);
+    delSquares();
   }
 
   updateStats();
@@ -395,34 +420,37 @@ document.getElementById('objectSelector').addEventListener('change', function ()
 
 function drawCenteredBoxFromSpec(spec) {
   // Eliminar cuadro anterior si existe
-  const oldBox = document.getElementById('specBox');
-  const oldLabel = document.getElementById('specBoxLabel');
-  if (oldBox) oldBox.remove();
-  if (oldLabel) oldLabel.remove();
+  delSquares();
 
   // Obtener dimensiones
-  const width = getInputAmountSpec(spec, 'Space_X') || null;
-  const height = getInputAmountSpec(spec, 'Space_Y') || null;
+  const width = getInputAmountSpec(spec, 'Space_X');
+  const height = getInputAmountSpec(spec, 'Space_Y');
+
+  if (width == null || height == null) return;
+
+  const scaledWidth = width * scale;
+  const scaledHeight = height * scale;
 
   // Crear el cuadro
   const box = document.createElement('div');
   box.id = 'specBox';
   box.style.position = 'fixed';
-  box.style.width = width + 'px';
-  box.style.height = height + 'px';
+  box.style.width = scaledWidth + 'px';
+  box.style.height = scaledHeight + 'px';
   box.style.border = '2px solid green';
   box.style.backgroundColor = 'transparent';
-  box.style.left = `calc(50% - ${width / 2}px)`;
-  box.style.top = `calc(50% - ${height / 2}px)`;
+  box.style.left = `calc(50% - ${scaledWidth / 2}px)`;
+  box.style.top = `calc(50% - ${scaledHeight / 2}px)`;
   box.style.pointerEvents = 'none';
+  document.body.appendChild(box);
 
   // Crear la etiqueta
   const label = document.createElement('div');
   label.id = 'specBoxLabel';
-  label.textContent = `W: ${width}px | H: ${height}px`;
+  label.textContent = `W: ${scaledWidth}px | H: ${scaledHeight}px`;
   label.style.position = 'fixed';
-  label.style.left = `calc(50% + ${width / 2 + 10}px)`;
-  label.style.top = `calc(50% - ${height / 2}px)`;
+  label.style.left = `calc(50% + ${scaledWidth / 2 + 10}px)`;
+  label.style.top = `calc(50% - ${scaledHeight / 2}px)`;
   label.style.color = 'green';
   label.style.fontWeight = 'bold';
   label.style.backgroundColor = 'white';
@@ -430,9 +458,14 @@ function drawCenteredBoxFromSpec(spec) {
   label.style.border = '1px solid green';
   label.style.borderRadius = '4px';
   label.style.pointerEvents = 'none';
-
-  document.body.appendChild(box);
   document.body.appendChild(label);
+}
+
+function delSquares(){
+  const oldBox = document.getElementById('specBox');
+  const oldLabel = document.getElementById('specBoxLabel');
+  if (oldBox) oldBox.remove();
+  if (oldLabel) oldLabel.remove();
 }
 
 function getInputAmountSpec(obj, key) {
@@ -440,10 +473,6 @@ function getInputAmountSpec(obj, key) {
   return found ? Number(found.amount) : null;
 }
 
-/*function getScale(obj, key) {
-  const found = obj.id?.find(id => id === key);
-  return found ? Number(600/found.amount) : null;
-}*/
 
 function formatObjectDetails(obj) {
   let html = `<h3>${obj.name} (ID: ${obj.id})</h3>`;
