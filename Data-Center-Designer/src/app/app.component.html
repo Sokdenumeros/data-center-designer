@@ -321,6 +321,14 @@
         </a>
       </div>
     </div>
+    <div>
+  <input type="file" (change)="onFileSelected($event)" accept=".csv" />
+</div>
+<div>
+  <button *ngFor="let id of uniqueIds" (click)="onButtonClick(id)">
+    ID: {{ id }}
+  </button>
+</div>
   </div>
 </main>
 
