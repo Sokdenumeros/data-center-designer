@@ -168,9 +168,11 @@ function processCSVSpecs(file, callback) {
         grouped[key] = {
           id: parseInt(row.ID),
           name: row.Name,
-          isInput: false,
-          inputs: [],
-          outputs: []
+          belowAmount: [],
+          aboveAmount: [],
+          minimize: [],
+          maximize: [],
+          unconstrained: []
         };
       }
 
@@ -179,29 +181,20 @@ function processCSVSpecs(file, callback) {
         amount: parseFloat(row.Amount)
       };
 
-      const isInput =
-        row.Below_Amount === '1' ||
-        row.Minimize === '1' ||
-        row.Unconstrained === '1';
-
-      const isOutput =
-        row.Above_Amount === '1' ||
-        row.Maximize === '1';
-
-      if (isInput) grouped[key].inputs.push(entry);
-      if (isOutput) grouped[key].outputs.push(entry);
-
-      if (row.Below_Amount === '1') {
-        grouped[key].isInput = true;
-      }
+      if (row.Below_Amount === '1') grouped[key].belowAmount.push(entry);
+      if (row.Above_Amount === '1') grouped[key].aboveAmount.push(entry);
+      if (row.Minimize === '1') grouped[key].minimize.push(entry);
+      if (row.Maximize === '1') grouped[key].maximize.push(entry);
+      if (row.Unconstrained === '1') grouped[key].unconstrained.push(entry);
     }
 
     const result = Object.values(grouped);
-    callback(result); // Llamamos al callback con los objetos finales
+    callback(result);
   };
 
   reader.readAsText(file);
 }
+
 
 function processCSVModules(file, callback) {
   const reader = new FileReader();
