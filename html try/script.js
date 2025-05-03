@@ -2,6 +2,7 @@ let droppedObjects = [];
 let selectedSpecObject = null;
 let parsedObjects = [];
 let sidebarItems = [];
+let lastMoved = null;
 
 function renderSidebarItems(objects) {
   const sidebar = document.getElementById('sidebar');
@@ -65,7 +66,9 @@ function addToCanvas(obj, x, y) {
   });
 
   // Movable within canvas
-  el.addEventListener('mousedown', function startDrag(e) {
+  el.addEventListener('mousedown', 
+    function startDrag(e) {
+    lastMoved = el;
     const startX = e.clientX;
     const startY = e.clientY;
     const origX = parseInt(el.style.left);
@@ -87,8 +90,26 @@ function addToCanvas(obj, x, y) {
 
   canvas.appendChild(el);
   droppedObjects.push(obj);
+  lastMoved = el;
   updateStats();
 }
+
+document.getElementById('deleteOneBtn').addEventListener('click', function () {
+  if (lastMoved && lastMoved.parentElement) {
+    lastMoved.parentElement.removeChild(lastMoved);
+
+    // Buscar y eliminar el objeto asociado de droppedObjects
+    const name = lastMoved.textContent;
+    const index = droppedObjects.findIndex(obj => obj.name === name);
+    if (index !== -1) {
+      droppedObjects.splice(index, 1);
+    }
+
+    lastMoved = null;
+    updateStats();
+  }
+});
+
 
 function getInputAmount(obj, key) {
   const found = obj.inputs?.find(input => input.unit === key);
