@@ -193,7 +193,7 @@ function firstSolution() {
 
   updateStats();
 }
-
+document.getElementById('generateBtn').addEventListener('click', firstSolution);
 
 function updateStats() {
   const inputSums = {};
@@ -380,7 +380,6 @@ document.getElementById('objectSelector').addEventListener('change', function ()
     detailsDiv.innerHTML = '';
   }
 
-  firstSolution();
   updateStats();
 });
 
