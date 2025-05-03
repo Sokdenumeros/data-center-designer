@@ -142,3 +142,63 @@ function updateStats() {
 
   stats.innerHTML = html;
 }
+
+function processCSVFile(file, callback) {
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    const csvText = e.target.result;
+    const lines = csvText.trim().split('\n');
+    const headers = lines[0].split(';').map(h => h.trim());
+
+    const rows = lines.slice(1).map(line => {
+      const values = line.split(';').map(v => v.trim());
+      const row = {};
+      headers.forEach((h, i) => {
+        row[h] = values[i];
+      });
+      return row;
+    });
+
+    const grouped = {};
+
+    for (const row of rows) {
+      const key = `${row.ID}-${row.Name}`;
+      if (!grouped[key]) {
+        grouped[key] = {
+          id: parseInt(row.ID),
+          name: row.Name,
+          isInput: false,
+          inputs: [],
+          outputs: []
+        };
+      }
+
+      const entry = {
+        unit: row.Unit,
+        amount: parseFloat(row.Amount)
+      };
+
+      const isInput =
+        row.Below_Amount === '1' ||
+        row.Minimize === '1' ||
+        row.Unconstrained === '1';
+
+      const isOutput =
+        row.Above_Amount === '1' ||
+        row.Maximize === '1';
+
+      if (isInput) grouped[key].inputs.push(entry);
+      if (isOutput) grouped[key].outputs.push(entry);
+
+      if (row.Below_Amount === '1') {
+        grouped[key].isInput = true;
+      }
+    }
+
+    const result = Object.values(grouped);
+    callback(result); // Llamamos al callback con los objetos finales
+  };
+
+  reader.readAsText(file);
+}
