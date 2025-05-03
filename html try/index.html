@@ -67,7 +67,6 @@
     <select id="objectSelector">
       <option value="">-- Choose one --</option>
     </select>
-    <div id="objectDetails" style="margin-top: 20px;"></div>
 
     <input type="file" id="moduleFile" accept=".csv" />
 
@@ -77,11 +76,17 @@
     </button>
   </div>
 
-  <div id="main-container">
-    <div id="sidebar"></div>
-    <div id="canvas"></div>
-    <div id="stats" style="position: absolute; bottom: 10px; left: 10px; background: #fff; padding: 10px; border: 1px solid #ccc;"></div>
+  <div id="main-container" style="display: flex; height: calc(100vh - 80px);">
+  <div id="sidebar" style="width: 200px; background: #f0f0f0; padding: 10px; overflow-y: auto;"></div>
+
+  <div id="canvas" style="flex: 1; position: relative; background: #fff; border: 1px solid #ccc; margin: 10px; overflow: hidden;"></div>
+
+  <div id="info-panel" style="width: 300px; padding: 10px; display: flex; flex-direction: column; gap: 10px;">
+    <div id="objectDetails" style="background: #f9f9f9; padding: 10px; border: 1px solid #ccc; flex: 1; overflow-y: auto;"></div>
+    <div id="stats" style="background: #f9f9f9; padding: 10px; border: 1px solid #ccc;"></div>
   </div>
+</div>
+
 
 <script>
   document.getElementById('specFile').addEventListener('change', function () {
