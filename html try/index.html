@@ -74,6 +74,14 @@
       style="font-size: 12px; padding: 4px 8px; margin: 5px; display: inline-block; width: fit-content; max-width: 200px; border-radius: 4px; cursor: pointer;">
       🗑️ Eliminar
     </button>
+    <button id="clearBtn"
+      style="font-size: 12px; padding: 4px 8px; margin: 5px; display: inline-block; width: fit-content; max-width: 200px; border-radius: 4px; cursor: pointer;">
+      🗑️ ClearAll
+    </button>
+    <button id="generateBtn"
+      style="font-size: 12px; padding: 4px 8px; margin: 5px; display: inline-block; width: fit-content; max-width: 200px; border-radius: 4px; cursor: pointer;">
+      Generate
+    </button>
   </div>
 
   <div id="main-container" style="display: flex; height: calc(100vh - 80px);">
@@ -87,13 +95,11 @@
   </div>
 </div>
 
-
 <script>
   document.getElementById('specFile').addEventListener('change', function () {
     const file = this.files[0];
     if (file) {
       processCSVSpecs(file, function (parsedObjects) {
-        console.log(parsedObjects);
       });
     }
   });

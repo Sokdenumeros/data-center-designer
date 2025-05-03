@@ -1,12 +1,14 @@
 let droppedObjects = [];
 let selectedSpecObject = null;
+let parsedObjects = [];
+let sidebarItems = [];
 let lastMoved = null;
 let scale = null; 
 
 function renderSidebarItems(objects) {
   const sidebar = document.getElementById('sidebar');
   const canvas = document.getElementById('canvas');
-
+  sidebarItems = objects;
   sidebar.innerHTML = ''; // Limpiar contenido anterior si lo hubiera
 
   objects.forEach(obj => {
@@ -44,6 +46,20 @@ function renderSidebarItems(objects) {
   });
 }
 
+function clearCanvas() {
+  const canvas = document.getElementById('canvas');
+
+  // Remove all elements with class "dropped"
+  const droppedElements = canvas.querySelectorAll('.dropped');
+  droppedElements.forEach(el => el.remove());
+
+  // Clear droppedObjects array
+  droppedObjects.length = 0;
+
+  // Reset stats display
+  updateStats();
+}
+document.getElementById('clearBtn').addEventListener('click', clearCanvas);
 
 function addToCanvas(obj, x, y) {
   const el = document.createElement('div');
@@ -114,6 +130,71 @@ function getInputAmount(obj, key) {
   const found = obj.inputs?.find(input => input.unit === key);
   return found ? Number(found.amount) : null;
 }
+
+function constraintsSatisfied(totals, specObject) {
+  for (const b of specObject.belowAmount || []) {
+    if ((totals[b.unit] || 0) > b.amount) return false;
+  }
+
+  for (const a of specObject.aboveAmount || []) {
+    if ((totals[a.unit] || 0) < a.amount) return false;
+  }
+
+  return true;
+}
+
+function findSolutionRecursive(sidebarItems, specObject, currentTotals = {}, selected = [], depth = 0, maxDepth = 10) {
+  if (constraintsSatisfied(currentTotals, specObject)) {
+    return selected; // ✅ Valid solution
+  }
+
+  if (depth >= maxDepth) {
+    return null; // ❌ Too deep
+  }
+
+  for (const item of sidebarItems) {
+    // Clone totals and update with this item's outputs
+    const newTotals = { ...currentTotals };
+    for (const output of item.outputs || []) {
+      newTotals[output.unit] = (newTotals[output.unit] || 0) + output.amount;
+    }
+
+    const result = findSolutionRecursive(
+      sidebarItems,
+      specObject,
+      newTotals,
+      [...selected, item],
+      depth + 1,
+      maxDepth
+    );
+
+    if (result) return result; // ✅ Found valid path
+  }
+
+  return null; // ❌ No valid path at this level
+}
+
+
+function firstSolution() {
+  const solution = findSolutionRecursive(sidebarItems, selectedSpecObject);
+
+  if (!solution) {
+    alert("❌ No solution found within max depth.");
+    return;
+  }
+
+  let x = 20, y = 20;
+  const step = 110;
+
+  for (const mod of solution) {
+    addToCanvas(mod, x, y);
+    y += step;
+    if (y > 500) { x += step; y = 20; }
+  }
+
+  updateStats();
+}
+document.getElementById('generateBtn').addEventListener('click', firstSolution);
 
 function updateStats() {
   const inputSums = {};
@@ -265,9 +346,6 @@ function processCSVModules(file, callback) {
 
   reader.readAsText(file);
 }
-
-
-let parsedObjects = [];
 
 document.getElementById('specFile').addEventListener('change', function (e) {
   const file = e.target.files[0];
