@@ -133,7 +133,7 @@ function getInputAmount(obj, key) {
 
 function constraintsSatisfied(totals, specObject) {
   for (const b of specObject.belowAmount || []) {
-    if ((totals[b.unit] || 0) > b.amount) return false;
+    if ((-totals[b.unit] || 0) > b.amount) return false;
   }
 
   for (const a of specObject.aboveAmount || []) {
@@ -157,6 +157,9 @@ function findSolutionRecursive(sidebarItems, specObject, currentTotals = {}, sel
     const newTotals = { ...currentTotals };
     for (const output of item.outputs || []) {
       newTotals[output.unit] = (newTotals[output.unit] || 0) + output.amount;
+    }
+    for (const input of item.inputs || []) {
+      newTotals[input.unit] = (newTotals[input.unit] || 0) - input.amount;
     }
 
     const result = findSolutionRecursive(
