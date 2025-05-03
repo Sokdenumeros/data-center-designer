@@ -1,4 +1,5 @@
 let droppedObjects = [];
+let selectedSpecObject = null;
 
 function renderSidebarItems(objects) {
   const sidebar = document.getElementById('sidebar');
@@ -108,18 +109,34 @@ function updateStats() {
     }
   }
 
-  let html = `<strong>🔌 Inputs</strong><ul>`;
-  for (const [unit, total] of Object.entries(inputSums)) {
-    html += `<li>${unit}: ${total}</li>`;
-  }
-  html += `</ul><strong>⚡ Outputs</strong><ul>`;
-  for (const [unit, total] of Object.entries(outputSums)) {
-    html += `<li>${unit}: ${total}</li>`;
-  }
-  html += '</ul>';
+  // Convert spec lists to easy lookup maps
+  const below = selectedSpecObject?.belowAmount?.reduce((map, item) => {
+    map[item.unit] = item.amount;
+    return map;
+  }, {}) || {};
 
-  stats.innerHTML = html;
+  const above = selectedSpecObject?.aboveAmount?.reduce((map, item) => {
+    map[item.unit] = item.amount;
+    return map;
+  }, {}) || {};
+
+  const renderList = (title, data, type) => {
+    let html = `<strong>${title}</strong><ul>`;
+    for (const [unit, total] of Object.entries(data)) {
+      let color = 'green';
+      if (below[unit] !== undefined && total > below[unit]) color = 'red';
+      if (above[unit] !== undefined && total < above[unit]) color = 'red';
+      html += `<li style="color: ${color}">${unit}: ${total}</li>`;
+    }
+    html += '</ul>';
+    return html;
+  };
+
+  stats.innerHTML =
+    renderList('🔌 Inputs', inputSums, 'input') +
+    renderList('⚡ Outputs', outputSums, 'output');
 }
+
 
 function processCSVSpecs(file, callback) {
   const reader = new FileReader();
@@ -257,11 +274,14 @@ document.getElementById('objectSelector').addEventListener('change', function ()
   const detailsDiv = document.getElementById('objectDetails');
 
   if (selectedIndex !== '') {
-    const obj = parsedObjects[selectedIndex];
-    detailsDiv.innerHTML = formatObjectDetails(obj);
+    selectedSpecObject = parsedObjects[selectedIndex];
+    detailsDiv.innerHTML = formatObjectDetails(selectedSpecObject);
   } else {
+    selectedSpecObject = null;
     detailsDiv.innerHTML = '';
   }
+
+  updateStats();
 });
 
 function formatObjectDetails(obj) {
